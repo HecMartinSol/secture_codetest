@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Prueba secture</title>
+	<meta charset="utf-8">
+
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
+
+	
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$("#toggleDefinitionBtn").click(function(event) {
+				$("#definition").slideToggle('slow');
+			});
+		});
+
+		class Wall {
+			constructor(numRows, bricksPerRow) {
+				this.numRows = numRows;
+				this.bricksPerRow = bricksPerRow;
+
+				this.halfBrick = "■";
+				this.brick = this.halfBrick + this.halfBrick;
+				this.mortar = "|";
+
+				this.wall = [];
+			}
+
+			stringify(){
+				var wallString = "";
+				for (var i = this.wall.length - 1; i >= 0; i--) {
+					var row = this.wall[i];
+					for (var j = 0; j < row.length; j++) {
+						let elem = row[j];
+						if (elem == 1 || elem == 2) elem = this.halfBrick;
+
+						wallString += elem;
+					}
+
+					if (i != 0) wallString += "\n";
+				}
+
+				return wallString;
+			}
+
+			buildWall(){
+
+				var currRow = [];
+				var numHalfBricks = 0;
+				var j, nextElement;
+				for (var row = 0; row < this.numRows; row++) {
+					currRow = [];
+					numHalfBricks = 0;
+					
+					do{
+						j = currRow.length;
+						nextElement = this.getNextElement(currRow, row, j);
+
+						if (nextElement != this.mortar){
+							currRow.push(nextElement);
+							numHalfBricks++;
+						}
+						else
+							currRow.push(this.mortar);
+					}
+					while(numHalfBricks < this.bricksPerRow * 2);
+
+					this.wall.push(currRow);
+				}
+			}
+
+			getNextElement(currRow, row, i){
+
+				var nextElement = "";
+				if (row == 0){
+					if (i == 0)
+						nextElement = 1;
+					else
+						nextElement = this.getNextElementLookingLeft(currRow, row, i);
+				}
+				else{
+					if (i == 0){
+						if (this.wall[row - 1][i] == 1) 
+							nextElement = 2;
+						else 
+							nextElement = 1;
+					}
+					else
+						nextElement = this.getNextElementLookingLeft(currRow, row, i);
+				}
+
+				
+				return nextElement;
+			}
+			getNextElementLookingLeft(currRow, row, i){
+				var nextElement = "";
+				if (currRow[i-1] == 1) 
+					nextElement = 2;
+				else if (currRow[i-1] == 2) 
+					nextElement = this.mortar;
+				else 
+					nextElement = 1;
+
+				return nextElement;
+			}
+		}
+
+		function construct() {
+			var numRows = parseInt($("#numRows").val());
+			var bricksPerRow = parseInt($("#bricksPerRow").val());
+
+			var wall = buildAWall(numRows,bricksPerRow);
+			var summaryInfo = "<p><span class='badge badge-primary'>Called:</span><br>buildAWall("+numRows+", "+bricksPerRow+")</p><br>";
+			summaryInfo += "<p><span class='badge badge-primary'>Raw result:</span><br>"+wall.split("\n").join("\\n")+"</p>";
+			summaryInfo += "<p><span class='badge badge-primary'>Formatted result::</span><br></p>";
+
+			$("#summaryInfo").html(summaryInfo);
+			$("#wall").html(wall);
+		}
+
+		function buildAWall(rows, bricksPerRow) {
+			if (isNaN(rows) || isNaN(bricksPerRow)) return "None";
+			if (typeof rows != 'number' || typeof bricksPerRow != 'number') return "None";
+			if (rows < 1 || bricksPerRow < 1) 								return "None";
+			if (rows * bricksPerRow > 10000) 								return "Naah, too much...here's my resignation.";
+
+			let wall = new Wall(rows, bricksPerRow);
+			wall.buildWall();
+
+			return wall.stringify();
+		}
+	</script>
+</head>
+<body>
+	<div class="m-5">
+		<div class="container">
+			<div class="h3">Secture CodeTest <button class="btn btn-sm btn-primary" id="toggleDefinitionBtn">Toggle definition</button></div>
+			<pre id="definition" style="display: none;">
+In this Kata, you are a builder and you are assigned a job of building a wall with a specific size (God knows why...).
+
+Create a function called build_a_wall (or buildAWall in JavaScript) that takes x and y as integer arguments 
+(which represent the number of rows of bricks for the wall and the number of bricks in each row respectively) 
+and outputs the wall as a string with the following symbols:
+
+■■ => One full brick (2 of ■)
+
+■ => Half a brick
+
+| => Mortar (between bricks on the same row)
+
+There has to be a | between every two half-bricks on the same row.
+For more stability each row's bricks cannot be aligned vertically with the bricks 
+of the row above it or below it meaning at every 2 rows you will have to make
+the furthest brick on both sides of the row at the size of half a brick (■) 
+while the first row from the bottom will only consist of full bricks. 
+Starting from the top, every new row is to be represented with \n except the bottom row.
+See the examples for a better understanding.
+
+If one or both of the arguments aren't valid (less than 1, isn't an integer, isn't given...etc) return None or null.
+
+If the number of bricks required to build the wall is greater than 10000 return "Naah, too much...here's my resignation."
+
+Examples, based on Python:
+
+build_a_wall(5,5) => '■■|■■|■■|■■|■■\n■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■\n■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■'
+prints:
+	■■|■■|■■|■■|■■
+	■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■
+	■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■
+
+build_a_wall(10,7) => '■|■■|■■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■|■■|■■\n■|■■|■■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■|■■|■■\n■|■■|■■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■|■■|■■\n■|■■|■■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■|■■|■■\n■|■■|■■|■■|■■|■■|■■|■\n■■|■■|■■|■■|■■|■■|■■'
+prints:
+	■|■■|■■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■|■■|■■
+	■|■■|■■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■|■■|■■
+	■|■■|■■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■|■■|■■
+	■|■■|■■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■|■■|■■
+	■|■■|■■|■■|■■|■■|■■|■
+	■■|■■|■■|■■|■■|■■|■■
+
+build_a_wall("eight",[3]) => None  }
+                                   }> Invalid input
+build_a_wall(12,-4) => None        }
+
+build_a_wall(123,987) => "Naah, too much...here's my resignation."
+
+It could be a bit of over-engineering, but try to approach the exercise having the OO principles and SOLID in mind.
+
+You've three hours to achieve the task. After the exercise please compress all your code including any dependencies you used and send it back to me.
+
+Feel free to call me on my phone (Pablo) 637412012 if you have any questions during the exercise.
+
+Please confirm me you got this email.
+
+Good luck!
+
+-
+Pablo
+			</pre>
+		</div>
+		
+		<hr>
+		<div class="container">
+			<div class="h3">Parameters</div>
+			
+			<form>
+				<div class="form-group">
+					<label for="numRows">Number of rows of the wall</label>
+					<input type="number" class="form-control" id="numRows" placeholder="Number of rows" autofocus value="10">
+				</div>
+				<div class="form-group">
+					<label for="bricksPerRow">Bricks per row</label>
+					<input type="number" class="form-control" id="bricksPerRow" placeholder="Bricks per row" value="7">
+				</div>
+			</form>
+			<button class="btn btn-primary" onclick="construct();">Construct</button>
+		</div>
+		
+		<hr>
+		<div class="container">
+			<div class="h3">Summary</div>
+			
+			<div id="summaryInfo"></div>
+			<pre id="wall">Click construct see result...</pre>
+		</div>
+
+
+	</div>
+</body>
+</html>
+
